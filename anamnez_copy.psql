@@ -1,0 +1,693 @@
+create table country
+(
+    id   bigserial not null
+        constraint country_pk
+            primary key,
+    name varchar   not null
+);
+
+alter table country
+    owner to operator;
+
+create unique index country_name_uindex
+    on country (name);
+
+create unique index country_id_uindex
+    on country (id);
+
+create table credit_staging
+(
+    doc_id             text,
+    seller_region      text,
+    seller_rayon       text,
+    seller_edrpou      bigint,
+    seller_ipn         text,
+    seller_name        text,
+    seller_state       text,
+    buyer_region       text,
+    buyer_rayon        text,
+    buyer_edrpou       bigint,
+    buyer_ipn          text,
+    buyer_name         text,
+    buyer_state        text,
+    reestr_number      bigint,
+    nn_number          text,
+    ordering_date      date,
+    registration_date  text,
+    total_pay_cost     text,
+    pdv_summ           text,
+    "20_percent_count" text,
+    "7_percent_count"  text,
+    rk_count           text,
+    correction_cost    text,
+    one_rk_cost        text,
+    product_name       text,
+    product_code       text,
+    unit               text,
+    count              text,
+    one_product_cost   text,
+    hash               bigint not null
+);
+
+alter table credit_staging
+    owner to operator;
+
+create table exchange
+(
+    date          date      not null
+        constraint exchange_date
+            unique,
+    "EUR-COM"     double precision,
+    "EUR-NBU"     double precision,
+    "USD-COM"     double precision,
+    "USD-NBU"     double precision,
+    "EUR-MB-BUY"  double precision,
+    "EUR-MB-SALE" double precision,
+    id            bigserial not null
+        constraint exchange_pk
+            primary key
+);
+
+alter table exchange
+    owner to operator;
+
+create unique index exchange_date_uindex
+    on exchange (date);
+
+create unique index exchange_id_uindex
+    on exchange (id);
+
+create table nl_org
+(
+    id     bigserial not null
+        constraint nl_org_pk
+            primary key,
+    name   text,
+    edrpou bigint    not null
+);
+
+alter table nl_org
+    owner to operator;
+
+create unique index nl_org_edrpou_uindex
+    on nl_org (edrpou);
+
+create unique index nl_org_id_uindex
+    on nl_org (id);
+
+create table nl_product
+(
+    id   bigserial not null
+        constraint nl_product_pk
+            primary key,
+    name text
+);
+
+alter table nl_product
+    owner to operator;
+
+create table nl_credit
+(
+    id               bigserial not null
+        constraint nl_credit_pk
+            primary key,
+    doc_id           bigint,
+    reestr_number    bigint,
+    seller_id        bigint
+        constraint nl_credit_nl_org_id_fk_2
+            references nl_org,
+    buyer_id         bigint
+        constraint nl_credit_nl_org_id_fk
+            references nl_org,
+    product_id       bigint
+        constraint nl_credit_nl_product_id_fk
+            references nl_product,
+    unit             varchar(50),
+    one_product_cost double precision,
+    count            double precision,
+    ordering_date    date
+);
+
+alter table nl_credit
+    owner to operator;
+
+create unique index nl_credit_id_uindex
+    on nl_credit (id);
+
+create unique index nl_product_id_uindex
+    on nl_product (id);
+
+create table nl_reestr
+(
+    id               bigserial not null
+        constraint nl_reestr_pk
+            primary key,
+    doc_id           bigint,
+    reestr_number    bigint,
+    seller_id        bigint
+        constraint nl_reestr_nl_org_id_fk
+            references nl_org
+            on update cascade on delete restrict,
+    buyer_id         bigint
+        constraint nl_reestr_nl_org_id_fk_2
+            references nl_org,
+    product_id       bigint
+        constraint nl_reestr_nl_product_id_fk
+            references nl_product,
+    unit             varchar(50),
+    one_product_cost double precision,
+    count            double precision,
+    ordering_date    date
+);
+
+alter table nl_reestr
+    owner to operator;
+
+create unique index nl_reestr_id_uindex
+    on nl_reestr (id);
+
+create table organisation
+(
+    id            bigserial             not null
+        constraint organisation_pk
+            primary key,
+    name          varchar(2000)         not null,
+    is_competitor boolean default false not null,
+    edrpou        bigint                not null,
+    firm_alias    varchar
+);
+
+alter table organisation
+    owner to operator;
+
+create unique index organisation_edrpou_uindex
+    on organisation (edrpou);
+
+create unique index organisation_id_uindex
+    on organisation (id);
+
+create table records_staging
+(
+    sender_name    text,
+    recipient_code bigint,
+    recipient_name text,
+    product_code   bigint,
+    trademark      text,
+    description    text,
+    country        text,
+    cost_customs   double precision,
+    cost_fact      double precision,
+    date           timestamp,
+    gtd            text,
+    hash           bigint
+);
+
+alter table records_staging
+    owner to operator;
+
+create index unique_recs
+    on records_staging (((description || ' '::text) || gtd));
+
+create table reestr_staging
+(
+    doc_id             text,
+    seller_region      text,
+    seller_rayon       text,
+    seller_edrpou      bigint,
+    seller_ipn         text,
+    seller_name        text,
+    seller_state       text,
+    buyer_region       text,
+    buyer_rayon        text,
+    buyer_edrpou       bigint,
+    buyer_ipn          text,
+    buyer_name         text,
+    buyer_state        text,
+    reestr_number      bigint,
+    nn_number          text,
+    ordering_date      text,
+    registration_date  text,
+    total_pay_cost     text,
+    pdv_summ           text,
+    "20_percent_count" text,
+    "7_percent_count"  text,
+    rk_count           text,
+    correction_cost    text,
+    one_rk_cost        text,
+    product_name       text,
+    product_code       text,
+    unit               text,
+    count              text,
+    one_product_cost   text,
+    hash               bigint not null
+);
+
+alter table reestr_staging
+    owner to operator;
+
+create table sender
+(
+    id         serial not null
+        constraint sender_pk
+            primary key,
+    name       varchar,
+    country_id bigint
+        constraint sender_country_id_fk
+            references country
+);
+
+alter table sender
+    owner to operator;
+
+create table records
+(
+    id           bigserial not null
+        constraint records_pk
+            primary key,
+    sender_id    bigint
+        constraint records_sender_id_fk
+            references sender,
+    recipient_id bigint
+        constraint records_organisation_id_fk
+            references organisation,
+    date         date,
+    gtd_name     varchar   not null,
+    exchange_id  bigint    not null
+);
+
+alter table records
+    owner to operator;
+
+create unique index records_id_uindex
+    on records (id);
+
+create unique index sender_id_uindex
+    on sender (id);
+
+create table sender_trademark
+(
+    sender_name varchar(255) not null,
+    trademark   varchar(255) not null,
+    comment     varchar(255)
+);
+
+alter table sender_trademark
+    owner to operator;
+
+create table tnved_mark
+(
+    code        integer not null,
+    description varchar
+);
+
+comment on table tnved_mark is 'Use as product mark trigger';
+
+alter table tnved_mark
+    owner to operator;
+
+create table trademark
+(
+    id   bigserial not null
+        constraint trademark_pk
+            primary key,
+    name varchar   not null
+);
+
+alter table trademark
+    owner to operator;
+
+create table gtd_records
+(
+    id           bigserial not null
+        constraint gtd_pk
+            primary key,
+    product_code bigint,
+    trademark_id bigint
+        constraint gtd_records_trademark_id_fk
+            references trademark,
+    cost_fact    real,
+    cost_customs real,
+    description  text,
+    record_id    bigint    not null
+        constraint gtd_records_records_id_fk
+            references records
+);
+
+alter table gtd_records
+    owner to operator;
+
+create unique index gtd_id_uindex
+    on gtd_records (id);
+
+create unique index trademark_id_uindex
+    on trademark (id);
+
+create unique index trademark_name_uindex
+    on trademark (name);
+
+create table django_migrations
+(
+    id      serial                   not null
+        constraint django_migrations_pkey
+            primary key,
+    app     varchar(255)             not null,
+    name    varchar(255)             not null,
+    applied timestamp with time zone not null
+);
+
+alter table django_migrations
+    owner to operator;
+
+create table django_content_type
+(
+    id        serial       not null
+        constraint django_content_type_pkey
+            primary key,
+    app_label varchar(100) not null,
+    model     varchar(100) not null,
+    constraint django_content_type_app_label_model_76bd3d3b_uniq
+        unique (app_label, model)
+);
+
+alter table django_content_type
+    owner to operator;
+
+create table auth_permission
+(
+    id              serial       not null
+        constraint auth_permission_pkey
+            primary key,
+    name            varchar(255) not null,
+    content_type_id integer      not null
+        constraint auth_permission_content_type_id_2f476e4b_fk_django_co
+            references django_content_type
+            deferrable initially deferred,
+    codename        varchar(100) not null,
+    constraint auth_permission_content_type_id_codename_01ab375a_uniq
+        unique (content_type_id, codename)
+);
+
+alter table auth_permission
+    owner to operator;
+
+create index auth_permission_content_type_id_2f476e4b
+    on auth_permission (content_type_id);
+
+create table auth_group
+(
+    id   serial       not null
+        constraint auth_group_pkey
+            primary key,
+    name varchar(150) not null
+        constraint auth_group_name_key
+            unique
+);
+
+alter table auth_group
+    owner to operator;
+
+create index auth_group_name_a6ea08ec_like
+    on auth_group (name);
+
+create table auth_group_permissions
+(
+    id            serial  not null
+        constraint auth_group_permissions_pkey
+            primary key,
+    group_id      integer not null
+        constraint auth_group_permissions_group_id_b120cbf9_fk_auth_group_id
+            references auth_group
+            deferrable initially deferred,
+    permission_id integer not null
+        constraint auth_group_permissio_permission_id_84c5c92e_fk_auth_perm
+            references auth_permission
+            deferrable initially deferred,
+    constraint auth_group_permissions_group_id_permission_id_0cd325b0_uniq
+        unique (group_id, permission_id)
+);
+
+alter table auth_group_permissions
+    owner to operator;
+
+create index auth_group_permissions_group_id_b120cbf9
+    on auth_group_permissions (group_id);
+
+create index auth_group_permissions_permission_id_84c5c92e
+    on auth_group_permissions (permission_id);
+
+create table auth_user
+(
+    id           serial                   not null
+        constraint auth_user_pkey
+            primary key,
+    password     varchar(128)             not null,
+    last_login   timestamp with time zone,
+    is_superuser boolean                  not null,
+    username     varchar(150)             not null
+        constraint auth_user_username_key
+            unique,
+    first_name   varchar(150)             not null,
+    last_name    varchar(150)             not null,
+    email        varchar(254)             not null,
+    is_staff     boolean                  not null,
+    is_active    boolean                  not null,
+    date_joined  timestamp with time zone not null
+);
+
+alter table auth_user
+    owner to operator;
+
+create index auth_user_username_6821ab7c_like
+    on auth_user (username);
+
+create table auth_user_groups
+(
+    id       serial  not null
+        constraint auth_user_groups_pkey
+            primary key,
+    user_id  integer not null
+        constraint auth_user_groups_user_id_6a12ed8b_fk_auth_user_id
+            references auth_user
+            deferrable initially deferred,
+    group_id integer not null
+        constraint auth_user_groups_group_id_97559544_fk_auth_group_id
+            references auth_group
+            deferrable initially deferred,
+    constraint auth_user_groups_user_id_group_id_94350c0c_uniq
+        unique (user_id, group_id)
+);
+
+alter table auth_user_groups
+    owner to operator;
+
+create index auth_user_groups_user_id_6a12ed8b
+    on auth_user_groups (user_id);
+
+create index auth_user_groups_group_id_97559544
+    on auth_user_groups (group_id);
+
+create table auth_user_user_permissions
+(
+    id            serial  not null
+        constraint auth_user_user_permissions_pkey
+            primary key,
+    user_id       integer not null
+        constraint auth_user_user_permissions_user_id_a95ead1b_fk_auth_user_id
+            references auth_user
+            deferrable initially deferred,
+    permission_id integer not null
+        constraint auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm
+            references auth_permission
+            deferrable initially deferred,
+    constraint auth_user_user_permissions_user_id_permission_id_14a6b632_uniq
+        unique (user_id, permission_id)
+);
+
+alter table auth_user_user_permissions
+    owner to operator;
+
+create index auth_user_user_permissions_user_id_a95ead1b
+    on auth_user_user_permissions (user_id);
+
+create index auth_user_user_permissions_permission_id_1fbb5f2c
+    on auth_user_user_permissions (permission_id);
+
+create table django_admin_log
+(
+    id              serial                   not null
+        constraint django_admin_log_pkey
+            primary key,
+    action_time     timestamp with time zone not null,
+    object_id       text,
+    object_repr     varchar(200)             not null,
+    action_flag     smallint                 not null
+        constraint django_admin_log_action_flag_check
+            check (action_flag >= 0),
+    change_message  text                     not null,
+    content_type_id integer
+        constraint django_admin_log_content_type_id_c4bce8eb_fk_django_co
+            references django_content_type
+            deferrable initially deferred,
+    user_id         integer                  not null
+        constraint django_admin_log_user_id_c564eba6_fk_auth_user_id
+            references auth_user
+            deferrable initially deferred
+);
+
+alter table django_admin_log
+    owner to operator;
+
+create index django_admin_log_content_type_id_c4bce8eb
+    on django_admin_log (content_type_id);
+
+create index django_admin_log_user_id_c564eba6
+    on django_admin_log (user_id);
+
+create table django_session
+(
+    session_key  varchar(40)              not null
+        constraint django_session_pkey
+            primary key,
+    session_data text                     not null,
+    expire_date  timestamp with time zone not null
+);
+
+alter table django_session
+    owner to operator;
+
+create index django_session_session_key_c0390e0f_like
+    on django_session (session_key);
+
+create index django_session_expire_date_a5c62663
+    on django_session (expire_date);
+
+create table app_cache
+(
+    cache_key varchar(255)             not null
+        constraint app_cache_pkey
+            primary key,
+    value     text                     not null,
+    expires   timestamp with time zone not null
+);
+
+alter table app_cache
+    owner to operator;
+
+create index app_cache_expires
+    on app_cache (expires);
+
+create table tm_alias
+(
+    sender_name text,
+    trademark   text,
+    comment     text
+);
+
+alter table tm_alias
+    owner to operator;
+
+create table tnved_group
+(
+    id     bigint,
+    gname  text,
+    gcodes text
+);
+
+alter table tnved_group
+    owner to operator;
+
+create table filter_codes
+(
+    product_code text,
+    short_code   text,
+    description  text
+);
+
+alter table filter_codes
+    owner to operator;
+
+create table youscore
+(
+    request   text,
+    jsonreply text,
+    id        bigserial not null
+        constraint youscore_pk
+            primary key
+);
+
+alter table youscore
+    owner to operator;
+
+create unique index youscore_request_uindex
+    on youscore (request);
+
+create unique index youscore_id_uindex
+    on youscore (id);
+
+create table main_profile
+(
+    id        serial      not null
+        constraint main_profile_pkey
+            primary key,
+    bio       text        not null,
+    currency  varchar(30) not null,
+    user_id   integer     not null
+        constraint main_profile_user_id_key
+            unique
+        constraint main_profile_user_id_b40d720a_fk_auth_user_id
+            references auth_user
+            deferrable initially deferred,
+    delimiter varchar(30) not null,
+    nal_part  boolean     not null,
+    ved_part  boolean     not null
+);
+
+alter table main_profile
+    owner to operator;
+
+create table records_staging_tmp
+(
+    sender_name    text,
+    recipient_code bigint,
+    recipient_name text,
+    product_code   bigint,
+    trademark      text,
+    description    text,
+    country        text,
+    cost_customs   double precision,
+    cost_fact      double precision,
+    date           timestamp,
+    gtd            text,
+    hash           bigint
+);
+
+alter table records_staging_tmp
+    owner to operator;
+
+create table competitors
+(
+    competitor_code    bigint,
+    competitor_name    text,
+    competitor_surname text
+);
+
+alter table competitors
+    owner to operator;
+
+create table exchange_tmp
+(
+    index         bigint,
+    date          date,
+    "EUR-COM"     text,
+    "EUR-NBU"     text,
+    "USD-COM"     text,
+    "USD-NBU"     text,
+    "EUR-MB-BUY"  double precision,
+    "EUR-MB-SALE" double precision
+);
+
+alter table exchange_tmp
+    owner to operator;
+
+create index ix_exchange_tmp_index
+    on exchange_tmp (index);
