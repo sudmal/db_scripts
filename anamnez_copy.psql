@@ -42,7 +42,7 @@ create table credit_staging
     correction_cost    text,
     one_rk_cost        text,
     product_name       text,
-    product_code       text,
+    product_code       bigint,
     unit               text,
     count              text,
     one_product_cost   text,
@@ -97,10 +97,11 @@ create unique index nl_org_id_uindex
 
 create table nl_product
 (
-    id   bigserial not null
+    id           bigserial not null
         constraint nl_product_pk
             primary key,
-    name text
+    name         text,
+    product_code bigint
 );
 
 alter table nl_product
@@ -125,7 +126,10 @@ create table nl_credit
     unit             varchar(50),
     one_product_cost double precision,
     count            double precision,
-    ordering_date    date
+    ordering_date    date,
+    exchange_id      bigint    not null
+        constraint nl_credit_exchange_id_fk
+            references exchange
 );
 
 alter table nl_credit
@@ -157,7 +161,11 @@ create table nl_reestr
     unit             varchar(50),
     one_product_cost double precision,
     count            double precision,
-    ordering_date    date
+    ordering_date    date,
+    exchange_id      bigint    not null
+        constraint nl_reestr_exchange_id_fk
+            references exchange
+            on update cascade on delete restrict
 );
 
 alter table nl_reestr
@@ -165,6 +173,15 @@ alter table nl_reestr
 
 create unique index nl_reestr_id_uindex
     on nl_reestr (id);
+
+create index nl_reestr_buyer_id_index
+    on nl_reestr (buyer_id);
+
+create index nl_reestr_ordering_date_index
+    on nl_reestr (ordering_date);
+
+create index nl_reestr_seller_id_index
+    on nl_reestr (seller_id);
 
 create table organisation
 (
@@ -235,7 +252,7 @@ create table reestr_staging
     correction_cost    text,
     one_rk_cost        text,
     product_name       text,
-    product_code       text,
+    product_code       bigint,
     unit               text,
     count              text,
     one_product_cost   text,
@@ -676,7 +693,6 @@ alter table competitors
 
 create table exchange_tmp
 (
-    index         bigint,
     date          date,
     "EUR-COM"     text,
     "EUR-NBU"     text,
@@ -689,5 +705,3 @@ create table exchange_tmp
 alter table exchange_tmp
     owner to operator;
 
-create index ix_exchange_tmp_index
-    on exchange_tmp (index);
